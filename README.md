@@ -1,6 +1,7 @@
 # StrippingTillDeath
 Strip mining program that has many features
 
+
 Libraries:
 * movement
 * fuelCheck
@@ -8,6 +9,8 @@ Libraries:
 * getDirection
 * veinMining
 * Stripping
+
+
 
 
 Executables:

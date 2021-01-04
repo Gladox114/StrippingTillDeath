@@ -30,6 +30,15 @@ function getLocation(timeout,debug)
     end
 end
 
+function updateLocation()
+    turtle.location = getLocation(5)
+end
+
+if offlineCoordination then
+    updateLocation = function() return end
+end
+
+
 --[[orientation will be:
 -x = 1
 -z = 2

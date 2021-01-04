@@ -1,6 +1,6 @@
 require("Stripping")
 
-turtle.facing = 1
+--turtle.facing = 1
 InitialisePosition()
 --scanSurrounding()
 

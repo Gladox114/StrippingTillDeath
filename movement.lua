@@ -35,6 +35,25 @@ if not TT2 then
     print("Movement: veinmining not loaded")
 end
 
+vectorFacing = {
+    --          x,y,z
+    vector.new(-1,0,0), -- ore is from your position facing to -x
+    vector.new(0,0,-1), -- block is facing -z
+    vector.new(1,0,0), -- block is facing +x
+    vector.new(0,0,1), -- +z
+    
+    vector.new(0,1,0), -- +y
+    vector.new(0,-1,0) -- -y
+    }
+
+-- Virtual steps --
+-- Tracking location without GPS --
+virt = { 
+    forward = function() turtle.location = turtle.location + vectorFacing[turtle.facing] end,
+    up = function() turtle.location = turtle.location + vectorFacing[5] end,
+    down = function() turtle.location = turtle.location + vectorFacing[6] end
+}
+-------------------
 
 
 -- Turn functions
@@ -103,10 +122,15 @@ dig.down =      function() dig.main(turtle.inspectDown, turtle.digDown) end
 
 -- Movement functions
 move = {}
-function move.main(Tmove,digFunc)
+function move.main(MoveDirection,digFunc)
     while true do -- while the turtle isn't moving try to make the way clear by digging
-        local moved,error = Tmove()
-        if moved then return end
+        
+        local moved,error = turtle[MoveDirection]()
+        if moved then 
+            virt[MoveDirection]()
+            print(turtle.location)
+            return
+        end
         if error == "Movement obstructed" then
             digFunc()
         elseif error == "Out of fuel" then
@@ -118,17 +142,24 @@ function move.main(Tmove,digFunc)
     end
 end
 
-move.forward =  function() move.main(turtle.forward, dig.forward) end
-move.up =       function() move.main(turtle.up, dig.up) end
-move.down =     function() move.main(turtle.down, dig.down) end
+move.forward =  function() move.main("forward", dig.forward) end
+move.up =       function() move.main("up", dig.up) end
+move.down =     function() move.main("down", dig.down) end
 
-
+-- same like "move.forward" but also diggin above making a tunnel --
 move.tunnel = function()
-    move.main(turtle.forward, dig.forward)
+    move.main("forward", dig.forward)
     dig.up()
 end
 
-move.line = function(moveFunc,number) -- one move function like move.forward or even move.tunnel,how many times to walk it |repeating a process to walk a line
+move.bigTunnel = function()
+    move.main("forward",dig.forward)
+    dig.up()
+    dig.down()
+end
+
+-- repeating one function --
+move.line = function(moveFunc,number) -- one move function like "move.forward" or even "move.tunnel",how many times to walk it |repeating a process to walk a line
     for i=1,number do
         moveFunc()
     end

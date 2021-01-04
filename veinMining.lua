@@ -4,6 +4,10 @@
 orelist = { -- the script will scan the words in the name of the block and mine it
     "_ore" -- Don't use "ore" when you have mods like wild_explORErer because that will mine every block of that mod
 }
+
+-- If false then "turtle.location" will be updated with GPS when needed.
+-- if true then it needs to know where it is like calculating the coordination with every step.
+offlineCoordination = true 
 ------------
 
 Vdig = {}
@@ -46,9 +50,9 @@ Vdig.down =      function() Vdig.main(turtle.inspectDown, turtle.digDown) end
 
 Vmove = {}
 
-Vmove.forward =  function() move.main(turtle.forward, Vdig.forward) end
-Vmove.up =       function() move.main(turtle.up, Vdig.up) end
-Vmove.down =     function() move.main(turtle.down, Vdig.down) end
+Vmove.forward =  function() move.main("forward", Vdig.forward) end
+Vmove.up =       function() move.main("up", Vdig.up) end
+Vmove.down =     function() move.main("down", Vdig.down) end
 
 
 function scanOre(blockname)
@@ -70,7 +74,7 @@ inspectDirection = {
     back = function() turn.leftTwice() local a,b=turtle.inspect() turn.leftTwice() return a,b end
 }
 
-vectorFacing = {
+vectorFacing = { -- same included in movement
 --          x,y,z
 vector.new(-1,0,0), -- ore is from your position facing to -x
 vector.new(0,0,-1), -- block is facing -z
@@ -218,8 +222,16 @@ function checkList(object, list              , activeState, stateVariableName)
     return false
 end
 
+function updateLocation()
+    turtle.location = getLocation(5)
+end
+
+if offlineCoordination then
+    updateLocation = function() return end
+end
+
 function scanSurrounding()
-    turtle.location = vector.new(gps.locate(5))
+    updateLocation()
     -- for every direction 
     for i,direction in pairs(directionalOrder) do
         print(direction)
@@ -301,7 +313,8 @@ end
 
 function vinemining()
     saveFacing = turtle.facing
-    saveLocation = vector.new(gps.locate(5))
+    updateLocation()
+    saveLocation = turtle.location
     local distance
     local scan = true
     while true do
@@ -311,16 +324,16 @@ function vinemining()
             pos = mapping.getNearestOre(mapping.mappedOre) -- get the next closest ore position from the scanned list
             if pos then -- if the list has some ore to mine
                 print("going to nearest Ore")
-                turtle.location = vector.new(gps.locate(5))
+                updateLocation()
                 print(pos,turtle.location)
                 distance = pos - turtle.location
                 print(distance)
                 Goto.facingFirst(distance,Vmove,turtle.facing) -- Fixed |The Goto command mines the Ore but doesn't remove it from the list!!!
-                turtle.location = vector.new(gps.locate(5)) -- get the location of the current position | or update it
+                updateLocation() -- get the location of the current position | or update it
                 mapping.mappedOre[turtle.location:tostring()].ore = false -- Remove the ore you went to
             else -- goto last position and continue strip mining or smth
                 print("going back to job")
-                turtle.location = vector.new(gps.locate(5))
+                updateLocation()
                 print(saveLocation,turtle.location)
                 distance = saveLocation - turtle.location
                 print(distance)

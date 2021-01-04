@@ -8,7 +8,7 @@
 require("getDirection")
 require("gotoGPS")
 
-
+-- config --
 strip = {
     nextStrip = 3, -- 3 blocks in front to the next strippin mine. 2 blocks appart to each other strip
     stripDepthLeft = 11, -- how deep to go into the strips
@@ -23,7 +23,7 @@ torch = {
     active = true,
     direction = turtle.placeUp
 }
-
+----------------
 
 --turtle.facing = 1 -- If this value is wrong then your turtle is drunk. It can even happen that it goes into infinity trying to reach it's own destination or smth. I can't read minds
 function InitialisePosition() --setup
@@ -114,7 +114,7 @@ function execute45(LocationsToGo)
     mainAxis = Goto.getAxis(strip.startFacing)
     oppositeMainAxis = Goto.getAxis(dryTurn.left(strip.startFacing))
     for i,v in pairs(LocationsToGo) do
-        turtle.location = getLocation(5)
+        updateLocation()
 
         if strip.startPosition[oppositeMainAxis] == v.position[oppositeMainAxis] then
             goingFromPosition = true

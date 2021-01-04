@@ -2,7 +2,7 @@
 Strip mining program that has many features
 
 
-Libraries:
+__Libraries:__
 * movement
 * fuelCheck
 * gotoGPS
@@ -13,7 +13,7 @@ Libraries:
 
 
 
-Executables:
+__Executables:__
 * test
 * test2
 * test3

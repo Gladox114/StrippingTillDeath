@@ -1,0 +1,19 @@
+1. Create a function that can go to the next GPS point
+
+2. Create a program that saves GPS points to a file because nobody
+wants to read of the debug window the coordinates so just
+place the turtle and name the position and boom it's saved | Maybe it's more useless
+
+3. don't ask like a retard in the GUI. Make a config file and
+make it happen except it's an emergency or smth.
+
+4. Try to go the same path back to the chest.
+
+5. Make a blacklist for blocks you can't dig and a list of ore blocks
+
+Done
+
+6. Make location offline possible. Meaning that
+you don't need a satelite to get your location
+except on the beginning. Maybe not even then
+when working only with deltas

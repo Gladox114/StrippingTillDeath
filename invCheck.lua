@@ -68,7 +68,7 @@ function inv.gotoChest()
     -- goto home first
     print("test",inv.homePosition,turtle.location)
     local distance = inv.homePosition - turtle.location
-    Goto.position(distance,Goto.getAxis(turtle.facing),false,move)
+    Goto.position(distance,Goto.getAxis(turtle.facing),true,move)
     print("test2")
     -- goto the chest
     distance = inv.chestItemsPos - turtle.location

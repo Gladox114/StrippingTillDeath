@@ -1,27 +1,28 @@
 --http://www.computercraft.info/forums2/index.php?/topic/1704-get-the-direction-the-turtle-face/
 
 function getOrientation()
-    loc1 = vector.new(gps.locate(2, false))
+    local loc1 = vector.new(gps.locate(2, false))
     if not turtle.forward() then
         for j=1,6 do
-            status,error = turtle.forward()
+            local status,error = turtle.forward()
             if not status then
                 if error == "Movement obstructed" then
                     turtle.dig()
                 elseif error == "Out of fuel" then
-                    error("No fuel. Refuel manually to use the orientation Function")
+                    print("No fuel. Refuel manually to use the orientation Function")
+                    shell.exit()
                 end
             else break end
         end
     end
-    loc2 = vector.new(gps.locate(2, false))
-    heading = loc2 - loc1
+    local loc2 = vector.new(gps.locate(2, false))
+    local heading = loc2 - loc1
     return ((heading.x + math.abs(heading.x) * 2) + (heading.z + math.abs(heading.z) * 3))
 end
 
 function getLocation(timeout,debug)
 
-    x,y,z = gps.locate(timeout,debug)
+    local x,y,z = gps.locate(timeout,debug)
 
     if x then
         return vector.new(x,y,z)

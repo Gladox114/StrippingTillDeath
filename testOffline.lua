@@ -1,6 +1,6 @@
 require("Stripping")
 
-InitialisePosition()
+InitialisePosition(true)
 print(turtle.location)
 print(turtle.facing)
 move.line(move.forward,2)

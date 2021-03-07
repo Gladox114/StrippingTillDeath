@@ -22,7 +22,7 @@ function Goto.Zaxis(vec,moveFunc)
             turn.to(2)
         end
         move.line(moveFunc,vec.z*-1)
-    else -- if the destination is in the plus
+    elseif vec.z > 0 then -- if the destination is in the plus
         if facing ~= 4 then
             turn.to(4)
         end
@@ -38,7 +38,7 @@ function Goto.Xaxis(vec,moveFunc)
             turn.to(1)
         end
         move.line(moveFunc,vec.x*-1)
-    else -- if the destination is in the plus
+    elseif vec.x > 0 then -- if the destination is in the plus
         if facing ~= 3 then
             turn.to(3)
         end
@@ -50,7 +50,7 @@ end
 function Goto.Yaxis(vec,MoveDirections)
     if vec.y < 0 then -- if the destination is in the minus 
         move.line(MoveDirections.down,vec.y*-1)
-    else -- if the destination is in the plus
+    elseif vec.y > 0 then -- if the destination is in the plus
         move.line(MoveDirections.up,vec.y)
     end
 

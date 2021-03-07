@@ -23,7 +23,7 @@ veinminer = {}
 
 TT1 = require("fuelCheck") -- if you don't want or need this then just remove this or don't put in the file
 TT2 = require("veinMining")
-
+TT3 = require("invCheck")
 
 if not TT1 then
     fuel.refuelItself = nilfunc
@@ -33,6 +33,10 @@ if not TT2 then
     veinminer.scanOre = nilfunc
     veinminer.vinemining = nilfunc
     print("Movement: veinmining not loaded")
+end
+if not TT3 then
+    inv.checkInv = nilfunc
+    print("Movement: InvCheck not loaded")
 end
 
 vectorFacing = {
@@ -94,11 +98,12 @@ end
 
 -- Dig functions
 dig = {}
-function dig.main(Tinspect,Tdig)
+function dig.inspect(Tinspect)
     local isblock, block = Tinspect()
     if isblock then -- if the block isn't air then
         local blacklisted = false
-        for i,name in pairs(blacklist) do -- check for every blacklisted word and if there is one then don't dig, else otherwise
+        -- check for every blacklisted word and if there is one then don't dig, else otherwise
+        for i,name in pairs(blacklist) do
             if string.find(block["name"],name) then
                 blacklisted = true
                 break
@@ -107,10 +112,18 @@ function dig.main(Tinspect,Tdig)
         if blacklisted == false then
             if scanOre(block["name"]) then -- if it's ore
                 vinemining()
+                return false
             else
-                Tdig() -- turtle.digDIRECTION()
+                return true
             end
         end
+    end
+    return false
+end
+
+function dig.main(Tinspect,Tdig)
+    if dig.inspect(Tinspect) then
+        Tdig() -- turtle.digDIRECTION()
     end
 end
 
@@ -127,6 +140,8 @@ function move.main(MoveDirection,digFunc)
         
         local moved,error = turtle[MoveDirection]()
         if moved then 
+            -- This is an Important part for offline walking
+            -- This will updates every step in turtle.location
             virt[MoveDirection]()
             print(turtle.location)
             return
@@ -136,8 +151,6 @@ function move.main(MoveDirection,digFunc)
         elseif error == "Out of fuel" then
             fuel.refuelItself()
         end
-
-        -- check if inventory is full
 
     end
 end
@@ -150,6 +163,7 @@ move.down =     function() move.main("down", dig.down) end
 move.tunnel = function()
     move.main("forward", dig.forward)
     dig.up()
+    dig.inspect(turtle.inspectDown)
 end
 
 move.bigTunnel = function()

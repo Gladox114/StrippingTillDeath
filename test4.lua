@@ -1,11 +1,11 @@
 require("Stripping")
 
-InitialisePosition()
+InitialisePosition(true)
 
 strip.LocationsToGo = {}
 calculateWholeStrip(strip.LocationsToGo)
 
-printWholeList(strip.LocationsToGo)
+printWholeList(strip.LocationsToGo,0)
 
 execute45(strip.LocationsToGo)
 

@@ -2,7 +2,8 @@
 
 -- config --
 orelist = { -- the script will scan the words in the name of the block and mine it
-    "_ore" -- Don't use "ore" when you have mods like wild_explORErer because that will mine every block of that mod
+    "_ore", -- Don't use "ore" when you have mods like wild_explORErer because that will mine every block of that mod
+    "ore_"
 }
 
 -- If false then "turtle.location" will be updated with GPS when needed.
@@ -24,13 +25,17 @@ function Vdig.main(Tinspect,Tdig)
             end
         end
         if blacklisted == false then
+            inv.checkInv(block["name"])
             Tdig() -- turtle.digDIRECTION()
         end
     end
 end
 
-function printWholeList(list)
+function printWholeList(list,speed)
     for i,v in pairs(list) do
+        if speed ~= 0 then
+            os.sleep(speed)
+        end
         if type(v) == "table" then
             for z,a in pairs(v) do
                 print(i,z,a)
@@ -42,7 +47,7 @@ function printWholeList(list)
 end
 
 
-function printWholeList(list) for i,v in pairs(list) do os.sleep(yees) if type(v) == "table" then for z,a in pairs(v) do print(i,z,a) end else print(i,v) end end end
+--function printWholeList(list) for i,v in pairs(list) do os.sleep(yees) if type(v) == "table" then for z,a in pairs(v) do print(i,z,a) end else print(i,v) end end end
 
 Vdig.forward =   function() Vdig.main(turtle.inspect, turtle.dig) end
 Vdig.up =        function() Vdig.main(turtle.inspectUp, turtle.digUp) end

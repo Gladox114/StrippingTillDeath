@@ -14,8 +14,8 @@ strip = {
     stripDepthLeft = 11, -- how deep to go into the strips
     stripDepthRight = 11,
     strips = 5, -- how many stips to do. nextStrip * strips = forward length of the whole strip mining in blocks
-    startPosition = "current", -- put in a vector or a string named "current" for the curernt position
-    startFacing = "current", -- same here
+    startPosition = "current", -- put in a vector or a string named "current" for the curernt position or the position as vector.new(x,y,z)
+    startFacing = "current", -- same here but just use an integer from 1 to 4
     miningMode = move.tunnel -- move.tunnel or move.forward
 }
 
@@ -26,12 +26,23 @@ torch = {
 ----------------
 
 --turtle.facing = 1 -- If this value is wrong then your turtle is drunk. It can even happen that it goes into infinity trying to reach it's own destination or smth. I can't read minds
-function InitialisePosition() --setup
+function InitialisePosition(offlinemode) --setup
     if not turtle.facing then
-        turtle.facing = getOrientation()
+        if offlinemode then
+            turtle.facing = 3
+        else
+            turtle.facing = getOrientation()
+            if turtle.facing == 0 then
+                error("Couldn't get Direction from satelites")
+            end
+        end
     end
 
-    turtle.location = getLocation(5)
+    if offlinemode then
+        turtle.location = vector.new(0,0,0)
+    else
+        turtle.location = getLocation(5)
+    end
 
     if strip.startPosition == "current" then
         strip.startPosition = turtle.location
@@ -65,7 +76,7 @@ dryTurn = {
         if dryFacing < 1 then dryFacing = 4 end
         return dryFacing
     end,
-    right = function(dryFacing) 
+    right = function(dryFacing)
         dryFacing = dryFacing + 1
         if dryFacing > 4 then dryFacing = 1 end
         return dryFacing
@@ -80,7 +91,7 @@ end
 
 function funcLeft(vPos,vFacing,distance)
     vFacing = dryTurn.left(vFacing) -- virtually turning left
-    vPos = virtualPosition + strip.vectorFacing[vFacing](distance) -- calculating distance to
+    vPos = vPos + strip.vectorFacing[vFacing](distance) -- calculating distance to
     return vPos
 end
 
@@ -91,31 +102,52 @@ function funcRight(vPos,vFacing,distance)
 end
 
 function calculateWholeStrip(list)
-    virtualFacing = strip.startFacing
-    virtualPosition = strip.startPosition
+    local virtualFacing = strip.startFacing
+    local virtualPosition = strip.startPosition
+    print("virtualPosition:",strip.startFacing)
     print(virtualFacing,turtle.facing,virtualPosition)
-    for blockDistance=1,strip.strips do -- for every stip thing do
-        midPoint = virtualPosition + strip.vectorFacing[virtualFacing](strip.nextStrip) -- calculate the next position
-        virtualPosition = midPoint 
-        insertPos(list,virtualPosition,false) -- insert the position
+    -- for every strip do
+    for blockDistance=1,strip.strips do
+        --------------------------------------------------------------------
+        -- calculate the next position to the mid point of the stripping
+        -- insert the position into a list and continue from the virtualPosition again going to the sides and back>> Repeat
+        --------------------------------------------------------------------
 
+        -- Next Middle Point
+        --------------------
+        local midPoint = virtualPosition + strip.vectorFacing[virtualFacing](strip.nextStrip)
+        virtualPosition = midPoint -- save the midpoint as current "virtual" position
+        insertPos(list,virtualPosition,false) -- insert the position into a execute list
+  
+        -- Left Entrace
+        ---------------
         leftPoint = funcLeft(midPoint,strip.startFacing,strip.stripDepthLeft) -- going left
         insertPos(list,leftPoint,false)
-        -- Insert here Torch Positions
+        -- INCOMING FEATURE: Insert here Torch Positions
+        
+        -- Right Entrace
+        ----------------
         rightPoint = funcRight(midPoint,strip.startFacing,strip.stripDepthRight) -- going right
         insertPos(list,rightPoint,false)
-        -- Insert here Torch Positions
+        -- INCOMING FEATURE: Insert here Torch Positions
+
+        -- Old Middle Point
+        -------------------
         insertPos(list,midPoint,false) -- going back to the midPoint
     end
 end
 
 function execute45(LocationsToGo)
 
+    -- get the main axis (x axis or y axis) so the turtle will always try to go the main path and then to the sides regardless where.
     mainAxis = Goto.getAxis(strip.startFacing)
     oppositeMainAxis = Goto.getAxis(dryTurn.left(strip.startFacing))
     for i,v in pairs(LocationsToGo) do
-        updateLocation()
+        --updateLocation()
 
+        -- compare if the startPosition (aka home) axis and the target position axis are the same.
+        -- with this method we can know if we are going to that position or from which is need for the Goto library.
+        -- this feature is actually obsolete because we go straight lines
         if strip.startPosition[oppositeMainAxis] == v.position[oppositeMainAxis] then
             goingFromPosition = true
         else

@@ -9,8 +9,7 @@ function getOrientation()
                 if error == "Movement obstructed" then
                     turtle.dig()
                 elseif error == "Out of fuel" then
-                    print("No fuel. Refuel manually to use the orientation Function")
-                    shell.exit()
+                    error("No fuel. Refuel manually to use the orientation Function")
                 end
             else break end
         end

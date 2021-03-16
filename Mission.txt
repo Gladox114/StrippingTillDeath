@@ -15,3 +15,6 @@ make it happen except it's an emergency or smth.
 you don't need a satelite to get your location
 except on the beginning. Maybe not even then
 when working only with deltas
+
+
+Bugs: When going back to the chest when VeinMining then it will take a weird path behind the chest. The Y axis is the last one taken.

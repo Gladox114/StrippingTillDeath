@@ -8,11 +8,11 @@
 require("Stripping")
 -- config
 strip.nextStrip = 3
-strip.strips = 7
+strip.strips = 20
 strip.stripDepthLeft = 10
 strip.stripDepthRight = 10
-inv.chestItemsPos = vector.new(0,0,-1)
-inv.chestItemsDir = 2
+inv.chestItemsPos = vector.new(0,0,1)
+inv.chestItemsDir = 4
 
 
 

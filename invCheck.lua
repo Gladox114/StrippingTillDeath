@@ -7,8 +7,10 @@ inv = {
     blacklist = {
         "torch",
         "coal"
-    }
+    },
+    realBlocks = {}
 }
+inv.realBlocks["minecraft:stone"] = "minecraft:cobblestone"
 ----------
 
 function inv.Space()
@@ -63,27 +65,30 @@ function inv.emptyInv(chestDirection)
 end
 
 function inv.gotoChest()
-    local saveFacing = turtle.facing
+     --local saveFacing = turtle.facing
     local saveLocation = turtle.location
-    -- goto home first
-    print("test",inv.homePosition,turtle.location)
-    local distance = inv.homePosition - turtle.location
-    Goto.position(distance,Goto.getAxis(turtle.facing),true,move)
-    print("test2")
-    -- goto the chest
+    -- goto home first --
+     --[[
+     --print("test",inv.homePosition,turtle.location)
+     local distance = inv.homePosition - turtle.location
+     Goto.position(distance,Goto.getAxis(turtle.facing),true,move)
+     ]]
+    -- goto the chest --
     distance = inv.chestItemsPos - turtle.location
-    Goto.position(distance,Goto.getAxis(turtle.facing),false,move)
-    -- empty yourself
+    Goto.facingFirst(dest,move,turtle.facing)
+    --Goto.position(distance,Goto.getAxis(turtle.facing),true,move)
+    
+    -- empty yourself --
     inv.emptyInv(inv.chestItemsDir)
-
-    -- goto home
+    --[[
+    -- goto home --
     distance = inv.homePosition - turtle.location
     Goto.position(distance,Goto.getAxis(turtle.facing),false,move)
     
-    -- Go back to the last saved location
+    -- Go back to the last saved location --
     distance = saveLocation - turtle.location
     Goto.position(distance,Goto.getAxis(turtle.facing),true,move)
-    turn.to(saveFacing)
+     --turn.to(saveFacing)]]
 end
 
 function inv.checkInv(blockName) -- passthrough the blockname as string
@@ -92,9 +97,9 @@ function inv.checkInv(blockName) -- passthrough the blockname as string
         -- If it still can fit then mine it. If not then go back and empty yourself
         if inv.doesItFit(blockName) == false then -- if the block doesn't fit
             -- return back to chests and empty yourself
-            inv.gotoChest()
-
+            return false
         end
     end
+    return true
 end
 

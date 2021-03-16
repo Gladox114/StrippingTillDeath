@@ -14,7 +14,7 @@ strip = {
     stripDepthLeft = 11, -- how deep to go into the strips
     stripDepthRight = 11,
     strips = 5, -- how many stips to do. nextStrip * strips = forward length of the whole strip mining in blocks
-    startPosition = "current", -- put in a vector or a string named "current" for the curernt position or the position as vector.new(x,y,z)
+    startPosition = "current", -- put in a vector as vector.new(x,y,z) or a string named "current" for the curernt position
     startFacing = "current", -- same here but just use an integer from 1 to 4
     miningMode = move.tunnel -- move.tunnel or move.forward
 }
@@ -24,6 +24,9 @@ torch = {
     direction = turtle.placeUp
 }
 ----------------
+
+strip.positionsList = {}
+
 
 --turtle.facing = 1 -- If this value is wrong then your turtle is drunk. It can even happen that it goes into infinity trying to reach it's own destination or smth. I can't read minds
 function InitialisePosition(offlinemode) --setup
@@ -137,25 +140,35 @@ function calculateWholeStrip(list)
     end
 end
 
+function initHomeAxis()
+    -- get the main axis (x axis or y axis) so the turtle will always try to go the main path and then to the sides regardless where.
+    strip.mainAxis = Goto.getAxis(strip.startFacing)
+    strip.oppositeMainAxis = Goto.getAxis(dryTurn.left(strip.startFacing))
+end
+
+function isGoingFromHome(position)
+    -- compare if the startPosition (aka home) axis and the target position axis are the same.
+    -- with this method we can know if we are going to that position or from, which is in need for the Goto library.
+    if strip.startPosition[strip.oppositeMainAxis] == position[oppositeMainAxis] then
+        --goingFromPosition = true
+        return true
+    else
+        --goingFromPosition = false
+        return false
+    end
+end
+
 function execute45(LocationsToGo)
 
-    -- get the main axis (x axis or y axis) so the turtle will always try to go the main path and then to the sides regardless where.
-    mainAxis = Goto.getAxis(strip.startFacing)
-    oppositeMainAxis = Goto.getAxis(dryTurn.left(strip.startFacing))
-    for i,v in pairs(LocationsToGo) do
-        --updateLocation()
+    initHomeAxis()
 
+    for i,v in pairs(LocationsToGo) do
         -- compare if the startPosition (aka home) axis and the target position axis are the same.
-        -- with this method we can know if we are going to that position or from which is need for the Goto library.
-        -- this feature is actually obsolete because we go straight lines
-        if strip.startPosition[oppositeMainAxis] == v.position[oppositeMainAxis] then
-            goingFromPosition = true
-        else
-            goingFromPosition = false
-        end
+        -- this feature is actually obsolete because we go actually straight lines
+        goingFromPosition = isGoingFromHome(v.position)
         dest = v.position - turtle.location -- get delta to the position you are going to
         print(dest,v.position,turtle.location,goingFromPosition)
-        Goto.position(dest,mainAxis,goingFromPosition,strip.move)
+        Goto.position(dest,strip.mainAxis,goingFromPosition,strip.move)
     end
 end
 

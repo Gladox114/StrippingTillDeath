@@ -98,6 +98,7 @@ end
 
 -- Dig functions
 dig = {}
+local shouldCheck = true
 function dig.inspect(Tinspect)
     local isblock, block = Tinspect()
     if isblock then -- if the block isn't air then
@@ -114,6 +115,25 @@ function dig.inspect(Tinspect)
                 vinemining()
                 return false
             else
+                if shouldCheck then
+                    if not inv.checkInv(block["name"]) then
+                        local saveLocation = turtle.location
+                        local saveFacing = turtle.facing
+                        -- go to home --
+                        local goingFromPosition = isGoingFromHome(turtle.location)
+                        Goto.position(strip.startPosition,strip.mainAxis,goingFromPosition,move)
+
+                        inv.gotoChest()
+
+                        Goto.position(strip.startPosition,strip.mainAxis,isGoingFromHome(turtle.location),move)
+
+                        dest = saveLocation - turtle.location
+                        Goto.facingFirst(dest,move,turtle.facing)
+                        turn.to(saveFacing)
+                        shouldCheck = true
+                        return true
+                    end
+                end
                 return true
             end
         end

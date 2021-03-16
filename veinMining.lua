@@ -12,7 +12,7 @@ offlineCoordination = true
 ------------
 
 Vdig = {}
-
+shouldCheck = true
 function Vdig.main(Tinspect,Tdig)
     local isblock, block = Tinspect()
     if isblock then -- if the block isn't air then
@@ -25,8 +25,45 @@ function Vdig.main(Tinspect,Tdig)
             end
         end
         if blacklisted == false then
-            inv.checkInv(block["name"])
-            Tdig() -- turtle.digDIRECTION()
+            if shouldCheck then
+                if not inv.checkInv(block["name"]) then
+                    shouldCheck = false
+                    local saveLocation_diging = turtle.location
+                    local saveFacing_diging = turtle.facing
+                    -- go to the last savePoint where the first ore was found (back on track) --
+                    local dest = saveLocation_VeinMining - turtle.location
+                    Goto.facingFirst(dest,Vmove,turtle.facing)
+                    -- going home --
+                    -- function from "Stripping.lua"
+                    local goingFromPosition = isGoingFromHome(turtle.location)
+                    dest = strip.startPosition - turtle.location
+                    Goto.position(dest, strip.mainAxis, goingFromPosition, Vmove)
+
+                    inv.gotoChest()
+
+                    -- going home --
+                    -- function from "Stripping.lua"
+                    local goingFromPosition = isGoingFromHome(turtle.location)
+                    dest = strip.startPosition - turtle.location
+                    Goto.position(dest, strip.mainAxis, goingFromPosition, Vmove)
+
+                    -- go to the last savePoint where the first ore was found (back on track) --
+                    local dest = saveLocation_VeinMining - turtle.location
+                    Goto.position(dest, strip.mainAxis, true,Vmove)
+
+
+                    local dest = saveLocation_diging - turtle.location
+                    Goto.facingFirst(dest,Vmove,turtle.facing)
+
+                    turn.to(saveFacing_diging)
+                    Tdig()
+                    shouldCheck = true
+                else
+                    Tdig() -- turtle.digDIRECTION()
+                end
+            else
+                Tdig()
+            end
         end
     end
 end
@@ -317,9 +354,9 @@ end
 --bug if it's under then the turtle maybe doesn't set it to false
 
 function vinemining()
-    saveFacing = turtle.facing
+    saveFacing_VeinMining = turtle.facing
     updateLocation()
-    saveLocation = turtle.location
+    saveLocation_VeinMining = turtle.location
     local distance
     local scan = true
     while true do
@@ -329,21 +366,15 @@ function vinemining()
             pos = mapping.getNearestOre(mapping.mappedOre) -- get the next closest ore position from the scanned list
             if pos then -- if the list has some ore to mine
                 print("going to nearest Ore")
-                updateLocation()
-                print(pos,turtle.location)
-                distance = pos - turtle.location
-                print(distance)
-                Goto.facingFirst(distance,Vmove,turtle.facing) -- Fixed |The Goto command mines the Ore but doesn't remove it from the list!!!
-                updateLocation() -- get the location of the current position | or update it
+                --updateLocation()
+                Goto.facingFirst(pos,Vmove,turtle.facing) -- Fixed |The Goto command mines the Ore but doesn't remove it from the list!!!
+                --updateLocation() -- get the location of the current position | or update it
                 mapping.mappedOre[turtle.location:tostring()].ore = false -- Remove the ore you went to
             else -- goto last position and continue strip mining or smth
                 print("going back to job")
-                updateLocation()
-                print(saveLocation,turtle.location)
-                distance = saveLocation - turtle.location
-                print(distance)
-                Goto.position(distance,Goto.getAxis(saveFacing),false,Vmove)
-                turn.to(saveFacing)
+                --updateLocation()
+                Goto.position(saveLocation_VeinMining,Goto.getAxis(saveFacing_VeinMining),false,Vmove)
+                turn.to(saveFacing_VeinMining)
                 break
             end
         end

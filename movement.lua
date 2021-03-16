@@ -117,18 +117,23 @@ function dig.inspect(Tinspect)
             else
                 if shouldCheck then
                     if not inv.checkInv(block["name"]) then
+                        shouldCheck = false
                         local saveLocation = turtle.location
                         local saveFacing = turtle.facing
-                        -- go to home --
-                        local goingFromPosition = isGoingFromHome(turtle.location)
-                        Goto.position(strip.startPosition,strip.mainAxis,goingFromPosition,move)
+                        -- go to start position --
+                        Goto.position(  strip.startPosition,
+                                        strip.mainAxis, -- choose one axis like z or x
+                                        isGoingFromHome(turtle.location), -- returns true or false
+                                        move)
 
                         inv.gotoChest()
-
+                        
+                        -- go to start position
                         Goto.position(strip.startPosition,strip.mainAxis,isGoingFromHome(turtle.location),move)
+                        
+                        -- go back to the saved location --
+                        Goto.facingFirst(saveLocation,move,turtle.facing)
 
-                        dest = saveLocation - turtle.location
-                        Goto.facingFirst(dest,move,turtle.facing)
                         turn.to(saveFacing)
                         shouldCheck = true
                         return true
@@ -161,9 +166,9 @@ function move.main(MoveDirection,digFunc)
         local moved,error = turtle[MoveDirection]()
         if moved then 
             -- This is an Important part for offline walking
-            -- This will updates every step in turtle.location
+            -- This will update every step in turtle.location
             virt[MoveDirection]()
-            print(turtle.location)
+            --print(turtle.location)
             return
         end
         if error == "Movement obstructed" then

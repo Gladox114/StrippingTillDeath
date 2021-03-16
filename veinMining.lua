@@ -31,29 +31,21 @@ function Vdig.main(Tinspect,Tdig)
                     local saveLocation_diging = turtle.location
                     local saveFacing_diging = turtle.facing
                     -- go to the last savePoint where the first ore was found (back on track) --
-                    local dest = saveLocation_VeinMining - turtle.location
-                    Goto.facingFirst(dest,Vmove,turtle.facing)
+                    Goto.facingFirst(saveLocation_VeinMining,Vmove,turtle.facing)
                     -- going home --
-                    -- function from "Stripping.lua"
-                    local goingFromPosition = isGoingFromHome(turtle.location)
-                    dest = strip.startPosition - turtle.location
-                    Goto.position(dest, strip.mainAxis, goingFromPosition, Vmove)
+                                                                       -- function from "Stripping.lua"
+                    Goto.position(strip.startPosition, strip.mainAxis, isGoingFromHome(turtle.location), Vmove)
 
                     inv.gotoChest()
 
                     -- going home --
-                    -- function from "Stripping.lua"
-                    local goingFromPosition = isGoingFromHome(turtle.location)
-                    dest = strip.startPosition - turtle.location
-                    Goto.position(dest, strip.mainAxis, goingFromPosition, Vmove)
+                    Goto.position(strip.startPosition, strip.mainAxis, isGoingFromHome(turtle.location), Vmove)
 
                     -- go to the last savePoint where the first ore was found (back on track) --
-                    local dest = saveLocation_VeinMining - turtle.location
-                    Goto.position(dest, strip.mainAxis, true,Vmove)
+                    Goto.position(saveLocation_VeinMining, strip.mainAxis, true,Vmove)
 
-
-                    local dest = saveLocation_diging - turtle.location
-                    Goto.facingFirst(dest,Vmove,turtle.facing)
+                    -- go back to the last ore you tried to mine --
+                    Goto.facingFirst(saveLocation_diging,Vmove,turtle.facing)
 
                     turn.to(saveFacing_diging)
                     Tdig()

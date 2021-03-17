@@ -22,10 +22,13 @@ function torch.placeTorch(Tplace,facing)
     if torch.checkTorch(facing) then
         print("Torch spot found")
         turtle.select(2)
-        if turtle.getItemDetail()["name"] == torch.name then
-            print("Torch placed: ",Tplace)
-            turtle[Tplace]()
-            torch.TorchList[tostring(turtle.location + cachedVectorFacing[facing])] = false
+        local itemSlot = turtle.getItemDetail()
+        if itemSlot then
+            if itemSlot["name"] == torch.name then
+                print("Torch placed: ",Tplace)
+                turtle[Tplace]()
+                torch.TorchList[tostring(turtle.location + cachedVectorFacing[facing])] = false
+            end
         end
     end
     print("done")

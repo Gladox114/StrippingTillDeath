@@ -31,21 +31,21 @@ function Vdig.main(Tinspect,Tdig)
                     local saveLocation_diging = turtle.location
                     local saveFacing_diging = turtle.facing
                     -- go to the last savePoint where the first ore was found (back on track) --
-                    Goto.facingFirst(saveLocation_VeinMining,Vmove,turtle.facing)
+                    Goto.facingFirst_custom(saveLocation_VeinMining,Vmove,turtle.facing)
                     -- going home --
                                                                        -- function from "Stripping.lua"
-                    Goto.position(strip.startPosition, strip.mainAxis, isGoingFromHome(turtle.location), Vmove)
+                    Goto.position_custom(strip.startPosition, strip.mainAxis, isGoingFromHome(turtle.location), Vmove)
 
                     inv.gotoChest()
 
                     -- going home --
-                    Goto.position(strip.startPosition, strip.mainAxis, isGoingFromHome(turtle.location), Vmove)
+                    Goto.position_custom(strip.startPosition, strip.mainAxis, isGoingFromHome(turtle.location), Vmove)
 
                     -- go to the last savePoint where the first ore was found (back on track) --
-                    Goto.position(saveLocation_VeinMining, strip.mainAxis, true,Vmove)
+                    Goto.position_custom(saveLocation_VeinMining, strip.mainAxis, true,Vmove)
 
                     -- go back to the last ore you tried to mine --
-                    Goto.facingFirst(saveLocation_diging,Vmove,turtle.facing)
+                    Goto.facingFirst_custom(saveLocation_diging,Vmove,turtle.facing)
 
                     turn.to(saveFacing_diging)
                     Tdig()
@@ -108,19 +108,6 @@ inspectDirection = {
     back = function() turn.leftTwice() local a,b=turtle.inspect() turn.leftTwice() return a,b end
 }
 
-vectorFacing = { -- same included in movement
---          x,y,z
-vector.new(-1,0,0), -- ore is from your position facing to -x
-vector.new(0,0,-1), -- block is facing -z
-vector.new(1,0,0), -- block is facing +x
-vector.new(0,0,1), -- +z
-
-vector.new(0,1,0), -- +y
-vector.new(0,-1,0) -- -y
-}
-
-
-
 getBlockPos = {
     dryTurn = {
         left = function(dryFacing)
@@ -135,7 +122,7 @@ getBlockPos = {
         end
     },
     main = function(facing) -- saving some bytes | I'm actually lazy to write it into each function
-        return turtle.location+vectorFacing[facing]
+        return turtle.location+cachedVectorFacing[facing]
     end,
 
     forward = function() return getBlockPos.main(turtle.facing) end,
@@ -143,8 +130,8 @@ getBlockPos = {
     right = function() return getBlockPos.main(getBlockPos.dryTurn.right(turtle.facing)) end,
     back = function() return getBlockPos.main(getBlockPos.dryTurn.left(getBlockPos.dryTurn.left(turtle.facing))) end,
 
-    up = function() return turtle.location+vectorFacing[5] end,
-    down = function() return turtle.location+vectorFacing[6] end
+    up = function() return turtle.location+cachedVectorFacing[5] end,
+    down = function() return turtle.location+cachedVectorFacing[6] end
 }
 
 directionalOrder = {
@@ -235,7 +222,7 @@ end
 -- find that boolean                                --
 ------------------------------------------------------
 --                 vector, table with strings, boolean*   , string*
-function checkList(object, list              , activeState, stateVariableName) 
+function checkList(object, list              , activeState, stateVariableName)
 
     for item,state in pairs(list) do
 
@@ -256,24 +243,21 @@ function checkList(object, list              , activeState, stateVariableName)
     return false
 end
 
+--[[
 function updateLocation()
     turtle.location = getLocation(5)
-end
+end]]
 
 if offlineCoordination then
     updateLocation = function() return end
 end
 
 function scanSurrounding()
-    updateLocation()
-    -- for every direction 
+    -- for every direction
     for i,direction in pairs(directionalOrder) do
-        print(direction)
-        print(turtle.location,turtle.facing)
-            -- get position of that directional block without rotating and moving
+        -- get position of that directional block without rotating and moving
         local blockPosition = getBlockPos[direction]()
-        print("1")
-            -- check if you already scanned that block. If not then rotate and inspect that ore
+        -- check if you already scanned that block. If not then rotate and inspect that ore
         if checkList(blockPosition,mapping.mappedOre) == false then
             -- inspect that ore and return info
             local isblock, block = inspectDirection[direction]()
@@ -282,21 +266,16 @@ function scanSurrounding()
             end
             if isblock then
                 if scanOre(block["name"]) then
-                    print("OreFound: "..direction,blockPosition) -- debug
-                    --print(blockPosition:tostring())
                     mapping.mappedOre[blockPosition:tostring()].ore = true
                 else
                     mapping.mappedOre[blockPosition:tostring()].ore = false
                 end
             else
+                -- if the block isn't existing anymore just unmark it for sure
                 mapping.mappedOre[blockPosition:tostring()].ore = false
             end
-        else -- debug
-            print("OreIsAlreadyScanned: "..i)
         end
-
     end
-    --printWholeList(mapping.mappedOre) -- debug
 end
 
 --[[
@@ -347,7 +326,7 @@ end
 
 function vinemining()
     saveFacing_VeinMining = turtle.facing
-    updateLocation()
+    --updateLocation()
     saveLocation_VeinMining = turtle.location
     local distance
     local scan = true
@@ -357,15 +336,15 @@ function vinemining()
         if scan == false then -- if there was no ore to mine then
             pos = mapping.getNearestOre(mapping.mappedOre) -- get the next closest ore position from the scanned list
             if pos then -- if the list has some ore to mine
-                print("going to nearest Ore")
+                print("going to nearest Ore:",pos,turtle.location)
                 --updateLocation()
-                Goto.facingFirst(pos,Vmove,turtle.facing) -- Fixed |The Goto command mines the Ore but doesn't remove it from the list!!!
+                Goto.facingFirst_custom(pos,Vmove,turtle.facing) -- Fixed |The Goto command mines the Ore but doesn't remove it from the list!!!
                 --updateLocation() -- get the location of the current position | or update it
                 mapping.mappedOre[turtle.location:tostring()].ore = false -- Remove the ore you went to
             else -- goto last position and continue strip mining or smth
                 print("going back to job")
                 --updateLocation()
-                Goto.position(saveLocation_VeinMining,Goto.getAxis(saveFacing_VeinMining),false,Vmove)
+                Goto.position_custom(saveLocation_VeinMining,Goto.getAxis(saveFacing_VeinMining),false,Vmove)
                 turn.to(saveFacing_VeinMining)
                 break
             end

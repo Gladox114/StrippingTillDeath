@@ -106,7 +106,39 @@ function Goto.position_old(vec,mainAxis,goingFromAxis,MoveDirections) -- vector 
     end
 end]]
 
-function Goto.facingFirst(vec,MoveDirections,facing)
+function Goto.facingFirst(vec,forwardFunc,facing)
+    vec = vec - turtle.location
+    if facing == 2 or facing == 4 then -- walk the facing axis first... Will be useless if we want to use a main axis. Maybe it's completely useless
+        Goto.posFirstZ(vec,forwardFunc)
+    else                        -- probably facing the x coordinates so lets go them first  | I really don't know why I am doing this
+        Goto.posFirstX(vec,forwardFunc)
+    end
+    Goto.Yaxis(vec,move)
+end
+
+function Goto.position(vec,mainAxis,goingFromAxis,forwardFunc) -- vector position, string "x" or "z", true or false, just put "move" api into it or a custom move list that doesn't have veinminer call function as example
+    vec = vec - turtle.location
+    if mainAxis == "z" then
+        if goingFromAxis then
+            Goto.posFirstZ(vec,forwardFunc)
+            Goto.Yaxis(vec,move)
+        else
+            Goto.Yaxis(vec,move)
+            Goto.posFirstX(vec,forwardFunc)
+        end
+    elseif mainAxis == "x" then
+        if goingFromAxis then
+            Goto.posFirstX(vec,forwardFunc)
+            Goto.Yaxis(vec,move)
+        else
+            Goto.Yaxis(vec,move)
+            Goto.posFirstZ(vec,forwardFunc)
+        end
+    end
+end
+
+
+function Goto.facingFirst_custom(vec,MoveDirections,facing)
     vec = vec - turtle.location
     if facing == 2 or facing == 4 then -- walk the facing axis first... Will be useless if we want to use a main axis. Maybe it's completely useless
         Goto.posFirstZ(vec,MoveDirections.forward)
@@ -116,7 +148,7 @@ function Goto.facingFirst(vec,MoveDirections,facing)
     Goto.Yaxis(vec,MoveDirections)
 end
 
-function Goto.position(vec,mainAxis,goingFromAxis,MoveDirections) -- vector position, string "x" or "z", true or false, just put "move" api into it or a custom move list that doesn't have veinminer call function as example
+function Goto.position_custom(vec,mainAxis,goingFromAxis,MoveDirections) -- vector position, string "x" or "z", true or false, just put "move" api into it or a custom move list that doesn't have veinminer call function as example
     vec = vec - turtle.location
     if mainAxis == "z" then
         if goingFromAxis then
@@ -136,4 +168,5 @@ function Goto.position(vec,mainAxis,goingFromAxis,MoveDirections) -- vector posi
         end
     end
 end
+
 ------------------------

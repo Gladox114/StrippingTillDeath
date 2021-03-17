@@ -7,7 +7,7 @@
 
 require("getDirection")
 require("gotoGPS")
-
+require("movement")
 -- config --
 strip = {
     nextStrip = 3, -- 3 blocks in front to the next strippin mine. 2 blocks appart to each other strip
@@ -18,15 +18,17 @@ strip = {
     startFacing = "current", -- same here but just use an integer from 1 to 4
     miningMode = move.tunnel -- move.tunnel or move.forward
 }
+--[[
+if not torch then 
+    torch = {} 
+    torch.TorchList = {}
+end]]
 
-torch = {
-    active = true,
-    direction = turtle.placeUp
-}
+--torch.active = true
+
 ----------------
 
 strip.positionsList = {}
-
 
 --turtle.facing = 1 -- If this value is wrong then your turtle is drunk. It can even happen that it goes into infinity trying to reach it's own destination or smth. I can't read minds
 function InitialisePosition(offlinemode) --setup
@@ -54,61 +56,118 @@ function InitialisePosition(offlinemode) --setup
         strip.startFacing = turtle.facing
     end
 
-    strip.move = move -- copy "move" function table
-    strip.move.forward = strip.miningMode -- replace forward with your desired forward function like "tunnel"
-  
+    -- does nothing now
+    table.insert(strip.positionsList,{name = "home",position = strip.startPosition})
 end
 --Goto.position(dest,"z",false,tunnelMove)
 
 strip.LocationsToGo = {}
 
-strip.vectorFacing = {
-    --          x,y,z
-    function(i) return vector.new(-i,0,0) end, -- ore is from your position facing to -x
-    function(i) return vector.new(0,0,-i) end, -- block is facing -z
-    function(i) return vector.new(i,0,0) end, -- block is facing +x
-    function(i) return vector.new(0,0,i) end, -- +z
-    
-    function(i) return vector.new(0,i,0) end, -- +y
-    function(i) return vector.new(0,-i,0) end -- -y
-    }
-
-dryTurn = {
-    left = function(dryFacing)
-        dryFacing = dryFacing - 1
-        if dryFacing < 1 then dryFacing = 4 end
-        return dryFacing
-    end,
-    right = function(dryFacing)
-        dryFacing = dryFacing + 1
-        if dryFacing > 4 then dryFacing = 1 end
-        return dryFacing
-    end
-}
-
 function insertPos(list,position,torched)
     table.insert(list,{ position = position,
                                        torch = torched})
-                                       --turning = turning})
 end
 
-function funcLeft(vPos,vFacing,distance)
-    vFacing = dryTurn.left(vFacing) -- virtually turning left
-    vPos = vPos + strip.vectorFacing[vFacing](distance) -- calculating distance to
+function calc(vPos,vFacing,distance,direction)
+    vFacing = dryTurn[direction](vFacing) -- virtually turning left or right
+    vPos = vPos + vectorFacing[vFacing](distance) -- calculating distance to
     return vPos
 end
 
-function funcRight(vPos,vFacing,distance)
-    vFacing = dryTurn.right(vFacing) -- virtually turning left
-    vPos = vPos + strip.vectorFacing[vFacing](distance) -- calculating distance to
-    return vPos
+-- use this when you place torches on the main path. It will fill the rest of the light to the strips
+function calcTorch(vPos,vFacing,distance,direction)
+    vFacing = dryTurn[direction](vFacing)
+    if distance > 6 then
+        print("distance is above 6")
+        -- move virtually 6 blocks to the edge of the light
+        vPos = vPos + vectorFacing[vFacing](6)
+        -- subtract that distance from our distance to the end
+        distance = distance - 6
+        while distance > 0 do
+            -- if the distance can reach the full length of the torch light
+            if distance >= 7 then
+                -- move the full light of the torch
+                vPos = vPos + vectorFacing[vFacing](7)
+                -- add that position to our torch list
+                torch.TorchList[tostring(vPos)] = true
+                -- subtract that distance from our distance to the end
+                distance = distance - 7
+                -- if our distance to the end can reach 7 blocks then we need to cover that light (6 covers all the light)
+                if distance > 6 then
+                    -- move to the edge of the light and repeat everything
+                    vPos = vPos + vectorFacing[vFacing](6)
+                    distance = distance - 6
+                else
+                    return -- if it can't reach after the edge of the light than we don't need to place more torches
+                end
+            else
+                -- if it can't reach the full light distance then place the torch with the remaining distance
+                vPos = vPos + vectorFacing[vFacing](distance)
+                torch.TorchList[tostring(vPos)] = true
+                return
+            end
+        end
+    end
 end
+
+-- calculates the distance to the torches to fill the main path with light also
+function calcTorch2(vPos,vFacing,distance,direction,distanceCloseTorch)
+    vFacing = dryTurn[direction](vFacing)
+    if distance > distanceCloseTorch then
+        -- move virtually 5 blocks to place the next torch that will fill the way with light
+        vPos = vPos + vectorFacing[vFacing](distanceCloseTorch)
+        -- add that position to our torch list
+        torch.TorchList[tostring(vPos)] = true
+        -- subtract that distance from our distance to the end
+        distance = distance - distanceCloseTorch
+        while distance > 0 do
+            if distance > 6 then
+                -- move to the edge of the light
+                vPos = vPos + vectorFacing[vFacing](6)
+                distance = distance - 6
+
+                if distance >= 7 then
+                    -- move the full light of the torch
+                    vPos = vPos + vectorFacing[vFacing](7)
+                    -- add that position to our torch list
+                    torch.TorchList[tostring(vPos)] = true
+                    -- subtract that distance from our distance to the end
+                    distance = distance - 7
+                else
+                    -- if it can't reach the full light distance then place the torch with the remaining distance
+                    vPos = vPos + vectorFacing[vFacing](distance)
+                    torch.TorchList[tostring(vPos)] = true
+                    return
+                end
+            else
+                return
+            end
+        end
+    else
+        if distance > 0 then
+            -- if it can't reach the full light distance then place the torch with the remaining distance
+            vPos = vPos + vectorFacing[vFacing](distance)
+            torch.TorchList[tostring(vPos)] = true
+            return
+        end
+    end
+end
+
 
 function calculateWholeStrip(list)
     local virtualFacing = strip.startFacing
     local virtualPosition = strip.startPosition
     print("virtualPosition:",strip.startFacing)
     print(virtualFacing,turtle.facing,virtualPosition)
+    --[[2blocks = 5distance
+        4blocks = 4distance
+        6blocks = 3distance
+
+        2/2 = 1   6-1 = 5
+        4/2 = 2   6-2 = 4
+        5/2 = 2.5 6-2.5 = 3.5 floor(3.5) = 3
+        6/2 = 3   6-3 = 3    ]]
+    distanceCloseTorch = math.floor(6-((strip.nextStrip-1)/2))
     -- for every strip do
     for blockDistance=1,strip.strips do
         --------------------------------------------------------------------
@@ -118,25 +177,30 @@ function calculateWholeStrip(list)
 
         -- Next Middle Point
         --------------------
-        local midPoint = virtualPosition + strip.vectorFacing[virtualFacing](strip.nextStrip)
+        local midPoint = virtualPosition + vectorFacing[virtualFacing](strip.nextStrip)
         virtualPosition = midPoint -- save the midpoint as current "virtual" position
         insertPos(list,virtualPosition,false) -- insert the position into a execute list
-  
+        torch.TorchList[tostring(vector.new(virtualPosition))] = true
         -- Left Entrace
         ---------------
-        leftPoint = funcLeft(midPoint,strip.startFacing,strip.stripDepthLeft) -- going left
+        leftPoint = calc(midPoint,strip.startFacing,strip.stripDepthLeft,"left") -- going left
         insertPos(list,leftPoint,false)
-        -- INCOMING FEATURE: Insert here Torch Positions
+        calcTorch2(midPoint,strip.startFacing,strip.stripDepthLeft,"left",distanceCloseTorch)
         
+        -- Old Middle Point
+        -------------------
+        insertPos(list,midPoint,true) -- going back to the midPoint
+
+
         -- Right Entrace
         ----------------
-        rightPoint = funcRight(midPoint,strip.startFacing,strip.stripDepthRight) -- going right
+        rightPoint = calc(midPoint,strip.startFacing,strip.stripDepthRight,"right") -- going right
         insertPos(list,rightPoint,false)
-        -- INCOMING FEATURE: Insert here Torch Positions
+        calcTorch2(midPoint,strip.startFacing,strip.stripDepthLeft,"right",distanceCloseTorch)
 
         -- Old Middle Point
         -------------------
-        insertPos(list,midPoint,false) -- going back to the midPoint
+        insertPos(list,midPoint,true) -- going back to the midPoint
     end
 end
 
@@ -148,7 +212,7 @@ end
 
 function isGoingFromHome(position)
     -- compare if the startPosition (aka home) axis and the target position axis are the same.
-    -- with this method we can know if we are going to that position or from, which is in need for the Goto library.
+    -- with this method we can know if we are going to that position or from, which is needed for the Goto library.
     if strip.startPosition[strip.oppositeMainAxis] == position[oppositeMainAxis] then
         --goingFromPosition = true
         return true
@@ -164,11 +228,17 @@ function execute45(LocationsToGo)
 
     for i,v in pairs(LocationsToGo) do
         -- compare if the startPosition (aka home) axis and the target position axis are the same.
-        -- this feature is actually obsolete because we go actually straight lines
-        goingFromPosition = isGoingFromHome(v.position)
-        dest = v.position - turtle.location -- get delta to the position you are going to
-        print(dest,v.position,turtle.location,goingFromPosition)
-        Goto.position(dest,strip.mainAxis,goingFromPosition,strip.move)
+        -- this feature is obsolete because we actually go straight lines
+        print(v.position,turtle.location)
+        if v.torch then
+            turtle.inverted = true
+            turtle.facing = dryTurn.back(turtle.facing)
+            Goto.position(v.position,strip.mainAxis,isGoingFromHome(v.position),move.backTorchedDown)
+            turtle.facing = dryTurn.back(turtle.facing)
+            turtle.inverted = false
+        else
+            Goto.position(v.position,strip.mainAxis,isGoingFromHome(v.position),move.tunnel)
+        end
     end
 end
 

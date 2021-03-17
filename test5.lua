@@ -22,7 +22,7 @@ inv.homePosition = strip.startPosition
 strip.LocationsToGo = {}
 calculateWholeStrip(strip.LocationsToGo)
 
-printWholeList(strip.LocationsToGo,0)
+--printWholeList(strip.LocationsToGo,0)
 
 execute45(strip.LocationsToGo)
 

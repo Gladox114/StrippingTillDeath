@@ -74,8 +74,7 @@ function inv.gotoChest()
      Goto.position(distance,Goto.getAxis(turtle.facing),true,move)
      ]]
     -- goto the chest --
-    distance = inv.chestItemsPos - turtle.location
-    Goto.facingFirst(dest,move,turtle.facing)
+    Goto.facingFirst_custom(inv.chestItemsPos,move,turtle.facing)
     --Goto.position(distance,Goto.getAxis(turtle.facing),true,move)
     
     -- empty yourself --

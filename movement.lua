@@ -20,11 +20,12 @@ nilfunc = function() return end
 
 fuel = {}
 veinminer = {}
+torch = {}
 
 TT1 = require("fuelCheck") -- if you don't want or need this then just remove this or don't put in the file
 TT2 = require("veinMining")
 TT3 = require("invCheck")
-
+TT4 = require("torch")
 if not TT1 then
     fuel.refuelItself = nilfunc
     print("Movement: fuelCheck not loaded")
@@ -38,8 +39,12 @@ if not TT3 then
     inv.checkInv = nilfunc
     print("Movement: InvCheck not loaded")
 end
+if not TT4 then
+    torch.placeTorch = nilfunc
+    print("Movement: Torch not loaded")
+end
 
-vectorFacing = {
+cachedVectorFacing = {
     --          x,y,z
     vector.new(-1,0,0), -- ore is from your position facing to -x
     vector.new(0,0,-1), -- block is facing -z
@@ -48,14 +53,47 @@ vectorFacing = {
     
     vector.new(0,1,0), -- +y
     vector.new(0,-1,0) -- -y
-    }
+}
+
+vectorFacing = {
+    --          x,y,z
+    function(i) return vector.new(-i,0,0) end, -- ore is from your position facing to -x
+    function(i) return vector.new(0,0,-i) end, -- block is facing -z
+    function(i) return vector.new(i,0,0) end, -- block is facing +x
+    function(i) return vector.new(0,0,i) end, -- +z
+
+    function(i) return vector.new(0,i,0) end, -- +y
+    function(i) return vector.new(0,-i,0) end -- -y
+}
+
+dryTurn = {
+    left = function(dryFacing)
+        dryFacing = dryFacing - 1
+        if dryFacing < 1 then dryFacing = 4 end
+        return dryFacing
+    end,
+    right = function(dryFacing)
+        dryFacing = dryFacing + 1
+        if dryFacing > 4 then dryFacing = 1 end
+        return dryFacing
+    end,
+    back = function(dryFacing)
+        dryFacing = dryFacing + 1
+        if dryFacing > 4 then dryFacing = 1 end
+        dryFacing = dryFacing + 1
+        if dryFacing > 4 then dryFacing = 1 end
+        return dryFacing
+    end
+}
 
 -- Virtual steps --
 -- Tracking location without GPS --
 virt = { 
-    forward = function() turtle.location = turtle.location + vectorFacing[turtle.facing] end,
-    up = function() turtle.location = turtle.location + vectorFacing[5] end,
-    down = function() turtle.location = turtle.location + vectorFacing[6] end
+    forward = function() turtle.location = turtle.location + cachedVectorFacing[turtle.facing] end,
+    up = function() turtle.location = turtle.location + cachedVectorFacing[5] end,
+    down = function() turtle.location = turtle.location + cachedVectorFacing[6] end,
+    back = function() turtle.location = turtle.location + cachedVectorFacing[turtle.facing] end
+    --back = function() turtle.location = turtle.location + cachedVectorFacing[dryTurn.left(dryTurn.left(turtle.facing))] end
 }
 -------------------
 
@@ -121,7 +159,7 @@ function dig.inspect(Tinspect)
                         local saveLocation = turtle.location
                         local saveFacing = turtle.facing
                         -- go to start position --
-                        Goto.position(  strip.startPosition,
+                        Goto.position_custom(  strip.startPosition,
                                         strip.mainAxis, -- choose one axis like z or x
                                         isGoingFromHome(turtle.location), -- returns true or false
                                         move)
@@ -129,10 +167,10 @@ function dig.inspect(Tinspect)
                         inv.gotoChest()
                         
                         -- go to start position
-                        Goto.position(strip.startPosition,strip.mainAxis,isGoingFromHome(turtle.location),move)
+                        Goto.position_custom(strip.startPosition,strip.mainAxis,isGoingFromHome(turtle.location),move)
                         
                         -- go back to the saved location --
-                        Goto.facingFirst(saveLocation,move,turtle.facing)
+                        Goto.facingFirst_custom(saveLocation,move,turtle.facing)
 
                         turn.to(saveFacing)
                         shouldCheck = true
@@ -156,7 +194,7 @@ end
 dig.forward =   function() dig.main(turtle.inspect, turtle.dig) end
 dig.up =        function() dig.main(turtle.inspectUp, turtle.digUp) end
 dig.down =      function() dig.main(turtle.inspectDown, turtle.digDown) end
-
+dig.back =      function() turn.leftTwice() dig.main(turtle.inspect, turtle.dig) turn.rightTwice() end
 
 -- Movement functions
 move = {}
@@ -165,10 +203,7 @@ function move.main(MoveDirection,digFunc)
         
         local moved,error = turtle[MoveDirection]()
         if moved then 
-            -- This is an Important part for offline walking
-            -- This will update every step in turtle.location
             virt[MoveDirection]()
-            --print(turtle.location)
             return
         end
         if error == "Movement obstructed" then
@@ -183,18 +218,23 @@ end
 move.forward =  function() move.main("forward", dig.forward) end
 move.up =       function() move.main("up", dig.up) end
 move.down =     function() move.main("down", dig.down) end
-
+move.back =     function() move.main("back",dig.back) end
 -- same like "move.forward" but also diggin above making a tunnel --
 move.tunnel = function()
-    move.main("forward", dig.forward)
+    move.forward()
     dig.up()
     dig.inspect(turtle.inspectDown)
 end
 
 move.bigTunnel = function()
-    move.main("forward",dig.forward)
+    move.forward()
     dig.up()
     dig.down()
+end
+
+move.backTorchedDown = function()
+    move.back()
+    torch.placeTorch("place",dryTurn.back(turtle.facing))
 end
 
 -- repeating one function --

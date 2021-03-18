@@ -55,11 +55,14 @@ function inv.checkBlacklisted(object,blacklist)
     return false
 end
 
-function inv.emptyInv(chestDirection)
+function inv.emptyFullInv(chestDirection)
     for i=1,16 do
-        if inv.checkBlacklisted(turtle.getItemDetail(i)["name"],inv.blacklist) == false then
-            turtle.select(i)
-            emptyInv[chestDirection]()
+        local currentItem = turtle.getItemDetail(i)
+        if currentItem then
+            if inv.checkBlacklisted(currentItem["name"],inv.blacklist) == false then
+                turtle.select(i)
+                emptyInv[chestDirection]()
+            end
         end
     end
 end
@@ -78,7 +81,7 @@ function inv.gotoChest()
     --Goto.position(distance,Goto.getAxis(turtle.facing),true,move)
     
     -- empty yourself --
-    inv.emptyInv(inv.chestItemsDir)
+    inv.emptyFullInv(inv.chestItemsDir)
     --[[
     -- goto home --
     distance = inv.homePosition - turtle.location

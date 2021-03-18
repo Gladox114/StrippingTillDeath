@@ -196,7 +196,7 @@ function calculateWholeStrip(list)
         ----------------
         rightPoint = calc(midPoint,strip.startFacing,strip.stripDepthRight,"right") -- going right
         insertPos(list,rightPoint,false)
-        calcTorch2(midPoint,strip.startFacing,strip.stripDepthLeft,"right",distanceCloseTorch)
+        calcTorch2(midPoint,strip.startFacing,strip.stripDepthRight,"right",distanceCloseTorch)
 
         -- Old Middle Point
         -------------------
